@@ -16,12 +16,13 @@ public class CacheConfig {
     public CacheManager cacheManager() {
 
         CaffeineCacheManager manager =
-                new CaffeineCacheManager("get-all-currencies", "exchange-rates");
+            new CaffeineCacheManager("get-all-currencies", "get-all-exchange-rates", "exchange-rates",
+                "get-exchange-rates-by-date", "get-exchange-rates-by-date-and-currency", "convert-to-euro");
 
         manager.setCaffeine(
-                Caffeine.newBuilder()
-                        .expireAfterWrite(24, TimeUnit.HOURS)
-                        .maximumSize(10000));
+            Caffeine.newBuilder()
+                .expireAfterWrite(24, TimeUnit.HOURS)
+                .maximumSize(10000));
 
         return manager;
     }

@@ -8,6 +8,7 @@ import com.crewmeister.cmcodingchallenge.model.Currency;
 import com.crewmeister.cmcodingchallenge.model.ExchangeRate;
 import com.crewmeister.cmcodingchallenge.repository.CurrencyRepository;
 import com.crewmeister.cmcodingchallenge.repository.ExchangeRateRepository;
+import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -15,9 +16,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.cache.CacheManager;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -32,19 +32,24 @@ public class ExchangeRateUpdateService {
 
     // Schedule cron job on 4PM CEST every day to update DB with the latest data from API
     @Scheduled(cron = "0 0 16 * * ?", zone = "Europe/Berlin")
+    @SchedulerLock(name = "updateDB", lockAtLeastFor = "PT5M", lockAtMostFor = "PT10M")
     public void updateDB() {
         ExchangeRateApiResponse allRates = exchangeRateProviderPort.getRates(LocalDate.now(ZoneOffset.of("Europe/Berlin")));
         updateDB(allRates);
     }
 
     // for setup db on server start
-    @EventListener(ApplicationReadyEvent.class)
-    public void initDB() {
+    //@EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
+    public void initDatabase() {
         ExchangeRateApiResponse allRates = exchangeRateProviderPort.getRates(null);
         updateDB(allRates);
     }
 
     private void updateDB(ExchangeRateApiResponse allRates) {
+        if (allRates == null) {
+            return;
+        }
         this.initializeCurrencyTable(allRates);
         this.initializeExchangeRateTable(allRates);
         rebuildCaches();
@@ -53,8 +58,10 @@ public class ExchangeRateUpdateService {
     //Initialize currencies table in DB
     @Transactional
     public void initializeCurrencyTable(ExchangeRateApiResponse data) {
+        List<String> persistedCurrencies = currencyRepository.findAll().stream().map(Currency::getCurrencyCode).toList();
         List<DimensionValue> currencies = this.extractAllCurrencies(data);
-        currencyRepository.saveAll(currencies.stream().map(x -> new Currency(x.id())).toList());
+        currencyRepository.saveAll(
+            currencies.stream().map(x -> new Currency(x.id())).filter(curr -> !persistedCurrencies.contains(curr.getCurrencyCode())).toList());
     }
 
     //Fill Exchange Rate Table in DB

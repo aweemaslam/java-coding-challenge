@@ -3,6 +3,7 @@ package com.crewmeister.cmcodingchallenge.external.adapter;
 import com.crewmeister.cmcodingchallenge.external.feign.BundesbankFeignClient;
 import com.crewmeister.cmcodingchallenge.external.feign.response.ExchangeRateApiResponse;
 import com.crewmeister.cmcodingchallenge.external.port.ExchangeRateProviderPort;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
@@ -16,8 +17,7 @@ public class ExchangeRateProviderAdapter implements ExchangeRateProviderPort {
     private final BundesbankFeignClient bundesbankFeignClient;
 
     @Cacheable("exchange-rates")
-    //@Retry(name = "exchangeRateRetry")
-    //@CircuitBreaker(name = "exchangeRate", fallbackMethod = "fallbackAllRates")
+    @CircuitBreaker(name = "exchangeRate", fallbackMethod = "fallbackAllRates")
     @Override
     public ExchangeRateApiResponse getRates(LocalDate date) {
         if (date == null) {
@@ -28,9 +28,9 @@ public class ExchangeRateProviderAdapter implements ExchangeRateProviderPort {
 
     }
 
-    // Fallback method for resilience
     public ExchangeRateApiResponse fallbackAllRates(Throwable t) {
         // Could return cached values or empty list
         return null;
+
     }
 }

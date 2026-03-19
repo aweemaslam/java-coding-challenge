@@ -20,15 +20,9 @@ public class CurrencyServiceImpl implements ICurrencyService {
 
     @Cacheable("get-all-currencies")
     public Page<String> getAllCurrencies(int page, int size, boolean sortAsc) {
-        Pageable sortedByName;
-        if(sortAsc) {
-             sortedByName =
-                PageRequest.of(page, size, Sort.by("currencyCode").ascending());
-        } else {
-             sortedByName =
-                PageRequest.of(page, size, Sort.by("currencyCode").descending());
-        }
-        log.error("xxxxxxx");
+        Sort sort = sortAsc ? Sort.by("currencyCode").ascending()
+            : Sort.by("currencyCode").descending();
+        Pageable sortedByName = PageRequest.of(page, size, sort);
         return currencyRepository.findAllCurrencyCodes(sortedByName);
     }
 }
