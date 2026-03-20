@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/currency")
+@RequestMapping("/api/currencies")
 @RequiredArgsConstructor
 @Tag(name = "Currency APIs", description = "Operations to fetch available currencies")
 public class CurrencyController {

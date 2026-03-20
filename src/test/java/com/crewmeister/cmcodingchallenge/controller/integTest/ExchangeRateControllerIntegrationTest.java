@@ -1,4 +1,4 @@
-package com.crewmeister.cmcodingchallenge.controller;
+package com.crewmeister.cmcodingchallenge.controller.integTest;
 
 import com.crewmeister.cmcodingchallenge.model.Currency;
 import com.crewmeister.cmcodingchallenge.model.ExchangeRate;
@@ -47,40 +47,40 @@ class ExchangeRateControllerIntegrationTest {
     }
 
     @Test
-    void getAllExchangeRates_returnsOkOrNotFound() throws Exception {
+    void getAllExchangeRates_returnsOk() throws Exception {
         MvcResult result = mockMvc.perform(get("/api/exchange-rate"))
-                .andReturn();
+            .andReturn();
         int status = result.getResponse().getStatus();
-        assertTrue(status == 200 || status == 404, "Expected 200 OK or 404 Not Found, but got: " + status);
+        assertTrue(status == 200, "Expected 200 OK  , but got: " + status);
     }
 
     @Test
-    void getExchangeRatesByDate_returnsOkOrNotFound() throws Exception {
+    void getExchangeRatesByDate_returnsOk() throws Exception {
         String date = "2024-01-01";
         MvcResult result = mockMvc.perform(get("/api/exchange-rate/" + date))
-                .andReturn();
+            .andReturn();
         int status = result.getResponse().getStatus();
-        assertTrue(status == 200 || status == 404, "Expected 200 OK or 404 Not Found, but got: " + status);
+        assertTrue(status == 200, "Expected 200 OK  , but got: " + status);
     }
 
     @Test
-    void convertToEuro_returnsOkOrBadRequestOrNotFound() throws Exception {
-        String payload = "{\"currencyCode\":\"USD\",\"amount\":100,\"date\":\"2024-01-01\"}";
+    void convertToEuro_returnsOk() throws Exception {
+        String payload = "{\"currencyCode\":\"USD\",\"exchangeAmount\":100,\"date\":\"2024-01-01\"}";
         MvcResult result = mockMvc.perform(post("/api/exchange-rate/convert")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
-                .andReturn();
+            .andReturn();
         int status = result.getResponse().getStatus();
-        assertTrue(status == 200 || status == 400 || status == 404, "Expected 200, 400, or 404, but got: " + status);
+        assertTrue(status == 200, "Expected 200 but got: " + status);
     }
 
     @Test
-    void getExchangeRate_returnsOkOrNotFound() throws Exception {
+    void getExchangeRate_returnsOk() throws Exception {
         String currency = "USD";
         String date = "2024-01-01";
         MvcResult result = mockMvc.perform(get("/api/exchange-rate/" + currency + "/" + date))
-                .andReturn();
+            .andReturn();
         int status = result.getResponse().getStatus();
-        assertTrue(status == 200 || status == 404, "Expected 200 OK or 404 Not Found, but got: " + status);
+        assertTrue(status == 200, "Expected 200 OK  , but got: " + status);
     }
 }

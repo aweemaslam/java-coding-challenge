@@ -1,4 +1,4 @@
-package com.crewmeister.cmcodingchallenge.controller;
+package com.crewmeister.cmcodingchallenge.controller.integTest;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +20,9 @@ class CurrencyControllerIntegrationTest {
 
     @Test
     void getCurrencies_returnsOkOrNotFound() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/currency")).andReturn();
+        MvcResult result = mockMvc.perform(get("/api/currencies")).andReturn();
         int status = result.getResponse().getStatus();
-        assertTrue(status == 200 || status == 404, "Expected 200 OK or 404 Not Found, but got: " + status);
+        assertTrue(status == 200, "Expected 200 OK, but got: " + status);
     }
 }
 

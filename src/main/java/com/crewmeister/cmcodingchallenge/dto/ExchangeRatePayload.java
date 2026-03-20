@@ -17,7 +17,7 @@ public record ExchangeRatePayload(@NotBlank(message = "Currency code is required
                                   @JsonFormat(pattern = "yyyy-MM-dd")
                                   LocalDate date,
 
-                                  @NotNull(message = "Exchange rate is required")
+                                  @NotNull(message = "Exchange amount is required")
                                   @Positive
                                   Double exchangeAmount
 ) {
