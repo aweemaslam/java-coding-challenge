@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.io.Serializable;
 import java.time.LocalDate;
 import lombok.Getter;
@@ -17,7 +18,10 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "exchangerate")
+@Table(
+    name = "exchangerate",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"currency_id", "date"})
+)
 @RequiredArgsConstructor
 @Setter
 @Getter

@@ -61,3 +61,8 @@ resilience4j:
         failureRateThreshold: 10
         waitDurationInOpenState: 5s
         permittedNumberOfCallsInHalfOpenState: 3
+
+app:
+  scheduler:
+    cron: "0 0 16 * * ?"
+    zone: Europe/Berlin
