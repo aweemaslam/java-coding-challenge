@@ -3,12 +3,11 @@ FROM maven:3.9.9-eclipse-temurin-21 AS builder
 
 WORKDIR /build
 
-# Copy pom and download dependencies first (better caching)
-COPY pom.xml .
-RUN mvn -B -q -e -DskipTests dependency:go-offline
+# Copy entire project to make go-offline work
+COPY . .
 
-# Copy source code
-COPY src ./src
+# Download dependencies
+RUN mvn -B -e -DskipTests dependency:go-offline
 
 # Build the application
 RUN mvn clean package -DskipTests
