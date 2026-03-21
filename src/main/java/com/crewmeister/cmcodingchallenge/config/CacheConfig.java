@@ -8,6 +8,9 @@ import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configuration class for application-level caching.
+ */
 @Configuration
 @EnableCaching
 public class CacheConfig {

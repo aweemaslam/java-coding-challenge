@@ -17,6 +17,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * Entity representing an exchange rate for a specific currency and date.
+ */
 @Entity
 @Table(
     name = "exchangerate",
@@ -28,19 +31,22 @@ import lombok.ToString;
 @ToString
 public class ExchangeRate extends BaseEntity implements Serializable {
 
+    /** Primary key for the exchange rate entity. */
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "exchange_rate_seq")
     @SequenceGenerator(name = "exchange_rate_seq", sequenceName = "exchange_rate_seq")
     private Long id;
 
+    /** The currency associated with this exchange rate. */
     @ManyToOne(optional = false)
     @JoinColumn(name="currency_id", nullable=false)
     private Currency currency;
 
+    /** Date for which this exchange rate is valid. */
     @Column(name="date", nullable = false)
     private LocalDate date;
-    
+
+    /** Exchange rate value for the currency on the given date. */
     @Column(name="exchange_rate")
     private Double exchangeRate;
-
 }

@@ -9,10 +9,15 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Global exception handler for centralized API error handling.
+ */
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-
+    /**
+     * Handles missing exchange rate errors.
+     */
     @ExceptionHandler(ExchangeRateNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleExchangeRateNotFound(ExchangeRateNotFoundException ex) {
         ErrorResponse error = new ErrorResponse(
@@ -22,6 +27,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
+    /**
+     * Handles missing currency errors.
+     */
     @ExceptionHandler(CurrencyNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCurrencyNotFound(CurrencyNotFoundException ex) {
         ErrorResponse error = new ErrorResponse(
@@ -32,6 +40,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
+    /**
+     * Handles unexpected application errors.
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
 
@@ -43,6 +54,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    /**
+     * Handles validation errors from request body or parameters.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
 
@@ -52,6 +66,7 @@ public class GlobalExceptionHandler {
             .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
             .distinct().reduce((msg1, msg2) -> msg1 + "; " + msg2)
             .orElse("Validation failed");
+
         ErrorResponse error = new ErrorResponse(
             ex.getStatusCode().value(),
             errors
@@ -60,6 +75,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, ex.getStatusCode());
     }
 
+    /**
+     * Handles malformed JSON or invalid request payloads.
+     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
 

@@ -64,5 +64,5 @@ resilience4j:
 
 app:
   scheduler:
-    cron: "0 0 16 * * ?"
+    cron: "0 0 16 ? * MON-FRI"
     zone: Europe/Berlin

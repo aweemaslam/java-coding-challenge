@@ -1,87 +1,330 @@
-# Crewmeister Test Assignment - Java Backend Developer
+# Crewmeister Coding Challenge – Exchange Rate Service
 
-## Intro
-Thank you for taking the time to complete this challenge as part of your application at Crewmeister!
-We are taking development skills very serious and invest a lot of time to find the right candidate. 
+## 📌 Overview
 
-At Crewmeister we aim to write excellent software and are convinced that this requires a high level of passion for and 
-attention to topics such as software design and principles, best practices and clean code. We take pride in the fact
-that the code we produce is extensible, testable, maintainable and runs fast.  
+This project is a **Spring Boot microservice** that provides EUR foreign exchange (EUR-FX) rates and currency conversion capabilities.
 
-At the same time, we always try to improve the effectiveness of our evaluation and improve the candidate journey
-throughout the process. Our aim is that our hiring process is mutually inspiring and feels like a gain for
-both parties regardless of the outcome. If you feel to give us feedback on that, please don't hesitate to do so. 
+It consumes exchange rate data from the **Deutsche Bundesbank** and exposes optimized APIs for clients.
 
-## The Challenge
+The implementation goes beyond the original assignment by incorporating **modern backend best practices**, including caching, resilience, scheduling, and SOLID / clean architecture.
+Target was to load historical data all at once during server start and with minimal time not in minutes but just in seconds.
 
-Your task is to create a foreign exchange rate service as SpringBoot-based microservice. 
+---
 
-The exchange rates can be received from [2]. This is a public service provided by the German central bank.
+## 🎯 Implemented User Stories
 
-As we are using user story format to specify our requirements, here are the user stories to implement:
+* ✅ As a client, I want to get a list of all available currencies
+* ✅ As a client, I want to get all EUR-FX exchange rates
+* ✅ As a client, I want to get exchange rates for a specific date
+* ✅ As a client, I want to convert a foreign currency amount to EUR
 
-- As a client, I want to get a list of all available currencies
-- As a client, I want to get all EUR-FX exchange rates at all available dates as a collection
-- As a client, I want to get the EUR-FX exchange rate at particular day
-- As a client, I want to get a foreign exchange amount for a given currency converted to EUR on a particular day
+---
 
-If you think that your service would require storage, please use H2 for simplicity, even if this would not be your choice if 
-you would implement an endpoint for real clients. 
+## 🏗️ Architecture
 
-We are looking out for the following aspects in your submission:
-- Well structured and thought-through api and endpoint design 
-- Clean code
-- Application of best practices & design patterns
+This project follows a hybrid approach:
 
+### 🔷 Hexagonal Architecture (Ports & Adapters)
 
-That being said it is not enough to "just make it work", show your full potential to write excellent software
- for Crewmeister ! 
+* External API integration via ports
+* Decoupled business logic
 
-## AI Usage Guidelines
- 
-We encourage you to use AI tools if that reflects your normal development workflow. However, **we expect transparency** in how you use these tools.
- 
-**Required Documentation:**
-  - Create an `AI_USAGE.md` file that includes:
-    - Which AI tools you used (e.g., ChatGPT, Claude, GitHub Copilot)
-    - Key prompts/questions you asked
-    - Relevant AI responses that shaped your solution
-    - Your reasoning for accepting, modifying, or rejecting AI suggestions
- 
-**What We're Looking For:**
-  - Understanding of the code you submit (AI-assisted or not)
-  - Thoughtful use of AI as a development tool
-  - Your own problem-solving and decision-making process
- 
-Simply asking an AI to "build the entire application" and submitting that output will not demonstrate your skills effectively.
- 
-## Setup
-#### Requirements
-- Java 21
-- Maven 3.x
+### 🔷 N-Layered Architecture
 
-#### Project
-The project was generated through the Spring initializer [1] for Java
- 21 with Spring Boot 3.2.2, dev tools and Spring Web as dependencies. In order to build and
- run it, you just need to click the green arrow in the Application class in your Intellij
- CE IDE or run the following command from your project root und Linux or ios. 
+* Controller → Service → Repository → Entity
 
-````shell script
-$ mvn spring-boot:run
-````
+### 🔷 Key Design Principles
 
-After running, the project, switch to your browser and hit http://localhost:8080/api/currencies. You should see some 
-demo output. 
+* SOLID principles
+* Clean code practices
+* Separation of concerns
+* Performance and Scalability
+* High testability
 
+---
 
-[1] https://start.spring.io/
+## ⚙️ Tech Stack
 
-[2] [Bundesbank Daily Exchange Rates](https://www.bundesbank.de/dynamic/action/en/statistics/time-series-databases/time-series-databases/759784/759784?statisticType=BBK_ITS&listId=www_sdks_b01012_3&treeAnchor=WECHSELKURSE)
+* Java 21
+* Spring Boot 3.5.10
+* Spring Data JPA
+* In-memory H2 Database
+* OpenFeign (External API calls + Retry)
+* Resilience4j (Circuit Breaker)
+* ShedLock (Distributed Scheduler Locking)
+* Caffeine Cache (To Reduce Database Hits)
+* Swagger / OpenAPI (Documentation)
+* Bean Validation
+* Docker (dockerfile added)
+* Lombok
 
-#### Submission
-- Submit completed project via the Greenhouse link in the email received from the Recruitment Manager
-- Please send us a link to a github repo that with the solution and make sure that that the branch/repo is not private.
-- Please do not submit zipped files
+---
 
+## 🚀 Features & Enhancements
 
+### 📡 External API Integration
 
+* Uses OpenFeign to fetch exchange rates + Retry in case there is any exception
+* Resilient calls with Circuit Breaker
+
+### ⚡ Caching (Caffeine)
+
+* Reduces repeated API/database calls
+* Improves performance significantly
+
+### ⏱️ Scheduler + ShedLock
+
+* Daily update of exchange rates (aligned with Bundesbank updates)
+* Prevents duplicate execution in distributed environments
+
+### 📦 Batch Processing
+
+* Efficient bulk insertion of exchange rates into DB during server start
+
+### 🗄️ JPA Projections
+
+* Fetch only required columns for better performance
+
+### ❗ Exception Handling
+
+* Centralized via `@ControllerAdvice`
+
+### 🧾 Validation
+
+* Request validation using Bean Validation
+
+---
+
+## 🗄️ Database Strategy
+
+The application uses an **H2 in-memory database** for simplicity.
+
+### Initialization Strategy
+
+Instead of querying the external API on every request:
+
+1. Data is fetched once
+2. Stored in DB
+3. Served from DB for the first time
+4. For fast api responses, cache and pagination makes api calls consistent low-latency responses regardless of dataset size 🚀
+
+👉 This improves performance drastically:
+
+* External API: ~4 second (depending on internet speed)
+* Database: ~milliseconds
+* Server booting + upload historical data takes around ~30 to 50 seconds
+
+---
+
+## 🔄 Scheduler
+
+A scheduled job runs week days to keep the database up to date:
+
+```java
+@Scheduled(cron = "0 0 16 ? * MON-FRI", zone = "Europe/Berlin")
+public void updateDB() {
+    // Fetch latest data and store in DB
+}
+```
+
+---
+
+## 📘 API Documentation
+
+Swagger UI:
+
+👉 http://localhost:8080/swagger-ui/index.html
+![Architecture Diagram](src/main/resources/images/Swagger-UI.png)
+
+---
+
+## 📡 API Endpoints
+
+### 1️⃣ Get All Currencies
+
+```
+GET /api/currencies
+```
+
+**Query Params:**
+
+* `page`
+* `size`
+* `sortAsc`
+```
+curl -X 'GET' \
+  'http://localhost:8080/api/currencies?page=0&size=10&sortAsc=false' \
+  -H 'accept: */*'
+```
+---
+
+### 2️⃣ Get All Exchange Rates
+
+```
+GET /api/exchange-rate
+```
+
+**Query Params:**
+
+* `pageNo`
+* `size`
+* `sortByDateAsc`
+* `ignoreNullRates`
+```
+curl -X 'GET' \
+  'http://localhost:8080/api/exchange-rate?pageNo=0&size=10&sortByDateAsc=true&ignoreNullRates=false' \
+  -H 'accept: */*'
+```
+---
+
+### 3️⃣ Get Exchange Rate by Currency & Date
+
+```
+GET /api/exchange-rate/{currencyCode}/{date}
+```
+```
+curl -X 'GET' \
+'http://localhost:8080/api/exchange-rate/AUD/1999-01-04' \
+-H 'accept: */*'
+```
+---
+
+### 4️⃣ Get Exchange Rates by Date
+
+```
+GET /api/exchange-rate/{date}
+```
+```
+curl -X 'GET' \
+  'http://localhost:8080/api/exchange-rate/1999-01-04?ignoreNullRates=false' \
+  -H 'accept: */*'
+```
+---
+
+### 5️⃣ Convert Currency to EUR
+
+```
+POST /api/exchange-rate/convert
+```
+
+**Request Body:**
+
+```json
+{
+  "currencyCode": "USD",
+  "date": "2026-03-18",
+  "exchangeAmount": 100
+}
+```
+```
+curl -X 'POST' \
+  'http://localhost:8080/api/exchange-rate/convert' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "currencyCode": "USD",
+  "date": "2026-03-18",
+  "exchangeAmount": 0.1
+}'
+```
+---
+
+## ▶️ Running the Application
+
+### Prerequisites
+
+* Java 21
+* Maven 3+
+
+### Run locally
+
+```
+mvn clean install
+mvn spring-boot:run
+```
+
+---
+
+## 🐳 Docker
+
+```
+docker build -t exchange-service .
+docker run -p 8080:8080 exchange-service
+```
+
+---
+
+## 🧪 Testing
+
+* Unit Tests → Mockito + JUnit 5
+* Integration Tests → SpringBootTest + H2
+* Repository Tests → @DataJpaTest
+
+---
+
+## 📂 Project Structure (Simplified)
+
+```
+config           → App configuration(cache, shedlock)
+controller/      → REST APIs
+service/         → Business logic
+repository/      → DB layer
+external
+  feign          → Feign Declaration
+  adapter/       → External API logic
+  port/          → Interfaces (Hexagonal)
+dto/             → Request/Response models
+exception/       → Global error handling
+```
+---
+## 🧩 Architecture Diagram
+![Architecture Diagram](src/main/resources/images/architecture.png)
+---
+## ⚖️ Trade-offs & Design Decisions
+
+- **H2 Database**
+  - Chosen for simplicity and fast setup
+  - Easily replaceable with PostgreSQL in production
+
+- **Database-first approach**
+  - Improves response time significantly
+  - Trade-off: chances of data duplication from external API
+
+- **Caffeine Cache**
+  - Reduces DB hits and improves latency
+  - Trade-off: requires cache invalidation strategy in future
+
+- **Scheduler instead of real-time fetch**
+  - Ensures stable and predictable performance
+  - Trade-off: slight delay in latest data availability
+
+- **Batch processing at startup**
+  - Fast bulk ingestion (~10–20 seconds)
+  - Trade-off: increased startup time
+---
+
+## 🧠 Key Design Decisions
+
+* Database-first approach for performance
+* Resilient external API integration
+* Clean architecture for maintainability
+* Scalable scheduling with locking
+* Optimized queries with projections
+
+---
+
+## 📌 Notes
+
+* H2 database is used for simplicity (can be replaced with PostgreSQL)
+* Scheduler ensures data freshness
+* Designed to scale in distributed environments
+
+---
+
+## 🔗 References
+
+* Spring Initializer: https://start.spring.io/
+* Bundesbank Exchange Rates API:
+  https://www.bundesbank.de/en/statistics/exchange-rates
+
+---

@@ -24,6 +24,10 @@ import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service to initialize and update the database with currency and exchange rate data.
+ * Handles scheduled updates, initial setup, and cache rebuilding.
+ */
 @Service
 @RequiredArgsConstructor
 public class DatabaseInitService {
@@ -37,9 +41,11 @@ public class DatabaseInitService {
     @Value("${app.scheduler.zone:Europe/Berlin}")
     private String schedulerZone;
 
-    // Schedule cron job on 4PM CEST every day to update DB with the latest data from API
+    /**
+     * Scheduled task to update the database daily at 4 PM CEST with the latest exchange rates.
+     */
     @Scheduled(
-        cron = "${app.scheduler.cron:0 0 16 * * ?}",
+        cron = "${app.scheduler.cron:0 0 16 ? * MON-FRI}",
         zone = "${app.scheduler.zone:Europe/Berlin}"
     )
     @SchedulerLock(name = "updateDB", lockAtLeastFor = "PT5M", lockAtMostFor = "PT10M")
@@ -48,15 +54,21 @@ public class DatabaseInitService {
         updateDB(allRates);
     }
 
-    // for setup db on server start
-    //@EventListener(ApplicationReadyEvent.class)
+    /**
+     * Initializes the database on server start with all exchange rates.
+     */
     @PostConstruct
     public void initDatabase() {
         ExchangeRateApiResponse allRates = exchangeRateProviderPort.getRates(null);
         updateDB(allRates);
     }
 
-    private void updateDB(ExchangeRateApiResponse allRates) {
+    /**
+     * Updates currency and exchange rate tables and rebuilds caches.
+     *
+     * @param allRates Exchange rate data from external provider
+     */
+    void updateDB(ExchangeRateApiResponse allRates) {
         if (allRates == null) {
             return;
         }
@@ -65,32 +77,50 @@ public class DatabaseInitService {
         rebuildCaches();
     }
 
-    //Initialize currencies table in DB
+    /**
+     * Initializes the currency table with new currencies from the API response.
+     *
+     * @param data API response containing currency information
+     */
     @Transactional
     public void initializeCurrencyTable(ExchangeRateApiResponse data) {
         List<String> persistedCurrencies = currencyRepository.findAll().stream().map(Currency::getCurrencyCode).toList();
         List<DimensionValue> currencies = exchangeRateUpdateServiceHelper.extractAllCurrencies(data);
         currencyRepository.saveAll(
-            currencies.stream().map(x -> new Currency(x.id())).filter(curr -> !persistedCurrencies.contains(curr.getCurrencyCode())).toList());
+            currencies.stream()
+                .map(x -> new Currency(x.id()))
+                .filter(curr -> !persistedCurrencies.contains(curr.getCurrencyCode()))
+                .toList()
+        );
     }
 
-    //Fill Exchange Rate Table in DB
+    /**
+     * Initializes the exchange rate table with data from the API response.
+     *
+     * @param response API response containing exchange rates
+     */
     @Transactional
     public void initializeExchangeRateTable(ExchangeRateApiResponse response) {
         Map<String, Currency> persistedCurrencies = currencyRepository.findAll().stream()
             .collect(Collectors.toMap(Currency::getCurrencyCode, c -> c));
+
         List<ExchangeRate> exchangeRates = exchangeRateUpdateServiceHelper.mapExchangeRateToEntity(response, persistedCurrencies);
-        //TODO: not a good approach to avoid duplicate enteries, need proper fix
+
+        // Remove duplicates before saving
         Set<String> existingKeys = exchangeRateRepository.findAll().parallelStream()
             .map(er -> er.getCurrency().getCurrencyCode() + "|" + er.getDate())
             .collect(Collectors.toSet());
+
         exchangeRates = exchangeRates.parallelStream()
             .filter(er -> !existingKeys.contains(er.getCurrency().getCurrencyCode() + "|" + er.getDate()))
             .toList();
+
         exchangeRateRepository.saveAll(exchangeRates);
     }
 
-    // rebuild cache every time cron runs
+    /**
+     * Clears all caches to ensure updated exchange rate data is used.
+     */
     public void rebuildCaches() {
         cacheManager.getCacheNames().forEach(cache -> Objects.requireNonNull(cacheManager.getCache(cache)).clear());
     }
