@@ -38,6 +38,6 @@ public class Currency extends BaseEntity implements Serializable {
     private Long id;
 
     /** ISO code or identifier of the currency (e.g., EUR, USD). */
-    @Column(name = "currency_code")
+    @Column(name = "currency_code", nullable = false)
     private String currencyCode;
 }
