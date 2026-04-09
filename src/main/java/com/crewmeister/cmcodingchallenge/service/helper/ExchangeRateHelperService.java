@@ -22,18 +22,18 @@ public class ExchangeRateHelperService {
      *
      * @param persistedRecords List of exchange rate DTOs
      * @param sortByDateAsc    True to sort results by ascending date
-     * @param ignoreNullRates  True to include records with null rates
+     * @param includeNullRates  True to include records with null rates
      * @return List of grouped exchange rate responses
      */
     public List<ExchangeRateGroupedResponse> formatResult(
         List<ExchangeRateDto> persistedRecords,
         boolean sortByDateAsc,
-        boolean ignoreNullRates
+        boolean includeNullRates
     ) {
 
         // Group records by date first
         Map<String, List<ExchangeRateDto>> groupedByDate = persistedRecords.parallelStream()
-            .filter(dto -> (dto.rate() != null) || ignoreNullRates) // ignore null rates if specified
+            .filter(dto -> (dto.rate() != null) || includeNullRates) // ignore null rates if specified
             .collect(Collectors.groupingBy(dto -> dto.date().toString()));
 
         // Transform into ExchangeRateGroupedResponse

@@ -27,7 +27,7 @@ class ExchangeRateRepositoryTest {
         rate.setDate(LocalDate.now());
         rate.setExchangeRate(1.23);
         exchangeRateRepository.save(rate);
-        assertTrue(exchangeRateRepository.findByCurrencyCurrencyCodeAndDate("USD", rate.getDate()).isPresent());
+        assertTrue(exchangeRateRepository.findExchangeRateByCurrencyCurrencyCodeAndDate("USD", rate.getDate()).isPresent());
     }
 
     @Test

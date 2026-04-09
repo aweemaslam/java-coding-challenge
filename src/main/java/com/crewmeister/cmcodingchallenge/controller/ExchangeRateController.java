@@ -5,6 +5,8 @@ import com.crewmeister.cmcodingchallenge.dto.ExchangeRatePayload;
 import com.crewmeister.cmcodingchallenge.dto.RateDto;
 import com.crewmeister.cmcodingchallenge.service.IExchangeRateService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,7 +39,7 @@ public class ExchangeRateController {
      * @param pageNo          Page number for pagination (default 0)
      * @param size            Page size (default 10)
      * @param sortByDateAsc   Sort by date ascending if true, descending if false (default true)
-     * @param ignoreNullRates ignore exchange rates which are not populated in api response (default true)
+     * @param includeNullRates ignore exchange rates which are not populated in api response (default true)
      * @return Paginated list of exchange rates grouped by currency
      */
     @GetMapping
@@ -50,12 +52,12 @@ public class ExchangeRateController {
         @RequestParam(defaultValue = "0") int pageNo,
         @RequestParam(defaultValue = "10") int size,
         @RequestParam(defaultValue = "true") boolean sortByDateAsc,
-        @RequestParam(defaultValue = "true") boolean ignoreNullRates) {
+        @RequestParam(defaultValue = "true") boolean includeNullRates) {
 
         log.info("GET /api/exchange-rate - Fetching all exchange rates");
 
         PageImpl<ExchangeRateGroupedResponse> rates =
-            exchangeRateService.getAllExchangeRates(pageNo, size, sortByDateAsc, ignoreNullRates);
+            exchangeRateService.getAllExchangeRates(pageNo, size, sortByDateAsc, includeNullRates);
 
         if (rates.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -69,7 +71,7 @@ public class ExchangeRateController {
      * Get EUR-FX exchange rates for a specific date.
      *
      * @param date            Date to fetch exchange rates for (ISO format: yyyy-MM-dd)
-     * @param ignoreNullRates ignore exchange rates which are not populated in api response (default true)
+     * @param includeNullRates ignore exchange rates which are not populated in api response (default true)
      * @return Exchange rates for all currencies on the specified date
      */
     @GetMapping("/{date}")
@@ -79,12 +81,21 @@ public class ExchangeRateController {
         @ApiResponse(responseCode = "404", description = "No exchange rates found for the specified date")
     })
     public ResponseEntity<ExchangeRateGroupedResponse> getExchangeRatesByDate(
+        @Parameter(
+            description = "The date in yyyy-MM-dd format",
+            example = "2024-03-20",
+            schema = @Schema(
+                type = "string",
+                format = "date",
+                pattern = "^\\d{4}-\\d{2}-\\d{2}$"
+            )
+        )
         @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-        @RequestParam(defaultValue = "true") boolean ignoreNullRates) {
+        @RequestParam(defaultValue = "true") boolean includeNullRates) {
 
         log.info("GET /api/exchange-rate/{} - Fetching rates for date", date);
 
-        ExchangeRateGroupedResponse rate = exchangeRateService.getExchangeRatesByDate(date, ignoreNullRates);
+        ExchangeRateGroupedResponse rate = exchangeRateService.getExchangeRatesByDate(date, includeNullRates);
         if (Objects.isNull(rate)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
@@ -126,6 +137,15 @@ public class ExchangeRateController {
     })
     public ResponseEntity<RateDto> getExchangeRate(
         @PathVariable String currencyCode,
+        @Parameter(
+            description = "The date in yyyy-MM-dd format",
+            example = "2024-03-20",
+            schema = @Schema(
+                type = "string",
+                format = "date",
+                pattern = "^\\d{4}-\\d{2}-\\d{2}$"
+            )
+        )
         @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
         log.info("GET /api/exchange-rate/{}/{} - Fetching specific rate", currencyCode, date);

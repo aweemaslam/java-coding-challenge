@@ -19,7 +19,7 @@ spring:
       idle-timeout: 300000
       max-lifetime: 1800000
       connection-timeout: 30000
-      pool-name: HikariPool
+      pool-name: ExchangeRateHikariPool
 
   jpa:
     properties:
@@ -28,7 +28,7 @@ spring:
       hibernate.order_inserts: true
       hibernate.order_updates: true
       hibernate.batch_versioned_data: true
-    show-sql: true
+    show-sql: false
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: update
@@ -64,5 +64,8 @@ resilience4j:
 
 app:
   scheduler:
-    cron: "0 0 16 ? * MON-FRI"
+    cron: "0 15 16 ? * MON-FRI"
     zone: Europe/Berlin
+logging:
+  level:
+    com.zaxxer.hikari: INFO

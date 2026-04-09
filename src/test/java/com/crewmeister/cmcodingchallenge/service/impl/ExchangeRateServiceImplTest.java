@@ -63,9 +63,7 @@ class ExchangeRateServiceImplTest {
 
     @Test
     void getExchangeRateByCurrencyAndDate_returnsRate() {
-        ExchangeRate rate = new ExchangeRate();
-        rate.setExchangeRate(1.23);
-        when(exchangeRateRepository.findByCurrencyCurrencyCodeAndDate(eq("USD"), any(LocalDate.class))).thenReturn(Optional.of(rate));
+        when(exchangeRateRepository.findExchangeRateByCurrencyCurrencyCodeAndDate(eq("USD"), any(LocalDate.class))).thenReturn(Optional.of(1.23));
         RateDto result = exchangeRateService.getExchangeRateByCurrencyAndDate("USD", LocalDate.now());
         assertNotNull(result);
         assertEquals(1.23, result.rate());
@@ -73,19 +71,17 @@ class ExchangeRateServiceImplTest {
 
     @Test
     void getExchangeRateByCurrencyAndDate_throwsIfNotFound() {
-        when(exchangeRateRepository.findByCurrencyCurrencyCodeAndDate(eq("USD"), any(LocalDate.class))).thenReturn(Optional.empty());
+        when(exchangeRateRepository.findExchangeRateByCurrencyCurrencyCodeAndDate(eq("USD"), any(LocalDate.class))).thenReturn(Optional.empty());
         assertThrows(ExchangeRateNotFoundException.class, () -> exchangeRateService.getExchangeRateByCurrencyAndDate("USD", LocalDate.now()));
     }
 
     @Test
     void convertToEuro_returnsConverted() {
-        ExchangeRate rate = new ExchangeRate();
-        rate.setExchangeRate(2.0);
         ExchangeRatePayload payload = mock(ExchangeRatePayload.class);
         when(payload.currencyCode()).thenReturn("USD");
         when(payload.date()).thenReturn(LocalDate.now());
         when(payload.exchangeAmount()).thenReturn(10.0);
-        when(exchangeRateRepository.findByCurrencyCurrencyCodeAndDate(eq("USD"), any(LocalDate.class))).thenReturn(Optional.of(rate));
+        when(exchangeRateRepository.findExchangeRateByCurrencyCurrencyCodeAndDate(eq("USD"), any(LocalDate.class))).thenReturn(Optional.of(2.0));
         when(exchangeRateHelperService.convertAmountToEuro(2.0, 10.0)).thenReturn(5.0);
         RateDto result = exchangeRateService.convertToEuro(payload);
         assertNotNull(result);
@@ -97,7 +93,7 @@ class ExchangeRateServiceImplTest {
         ExchangeRatePayload payload = mock(ExchangeRatePayload.class);
         when(payload.currencyCode()).thenReturn("USD");
         when(payload.date()).thenReturn(LocalDate.now());
-        when(exchangeRateRepository.findByCurrencyCurrencyCodeAndDate(eq("USD"), any(LocalDate.class))).thenReturn(Optional.empty());
+        when(exchangeRateRepository.findExchangeRateByCurrencyCurrencyCodeAndDate(eq("USD"), any(LocalDate.class))).thenReturn(Optional.empty());
         assertThrows(ExchangeRateNotFoundException.class, () -> exchangeRateService.convertToEuro(payload));
     }
 }

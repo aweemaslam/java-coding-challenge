@@ -1,11 +1,13 @@
 package com.crewmeister.cmcodingchallenge.service.helper;
 
 import com.crewmeister.cmcodingchallenge.exception.CurrencyNotFoundException;
+import com.crewmeister.cmcodingchallenge.external.feign.response.Dimension;
 import com.crewmeister.cmcodingchallenge.external.feign.response.DimensionValue;
 import com.crewmeister.cmcodingchallenge.external.feign.response.ExchangeRateApiResponse;
 import com.crewmeister.cmcodingchallenge.model.Currency;
 import com.crewmeister.cmcodingchallenge.model.ExchangeRate;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,7 +45,7 @@ public class DatabaseInitServiceHelper {
                     )
                 );
 
-                return entry.getValue().observations().entrySet().stream()
+                return entry.getValue().observations() != null ? entry.getValue().observations().entrySet().stream()
                     .map(obs -> {
                         ExchangeRate e = new ExchangeRate();
 
@@ -59,7 +61,7 @@ public class DatabaseInitServiceHelper {
                         e.setCurrency(currency);
 
                         return e;
-                    });
+                    }): null;
             })
             .toList();
     }
@@ -68,11 +70,15 @@ public class DatabaseInitServiceHelper {
      * Extracts all available observation dates from the API response.
      */
     public List<DimensionValue> extractAllDates(ExchangeRateApiResponse data) {
-        return data.data().structure().dimensions().observation().stream()
-            .filter(x -> x.id().contentEquals("TIME_PERIOD"))
-            .findAny()
-            .orElseThrow(() -> new CurrencyNotFoundException("TIME_PERIOD not found."))
-            .values();
+        List<Dimension> observation = data.data().structure().dimensions().observation();
+        if (observation != null) {
+            return observation.stream()
+                .filter(x -> x.id().contentEquals("TIME_PERIOD"))
+                .findAny()
+                .orElseThrow(() -> new CurrencyNotFoundException("TIME_PERIOD not found."))
+                .values();
+        }
+        return new ArrayList<>();
     }
 
     /**

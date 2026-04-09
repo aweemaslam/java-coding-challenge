@@ -96,4 +96,23 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
+
+    /**
+     * Handles path variable type mismatches, e.g., invalid date format in URL.
+     */
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+        if (ex.getRequiredType() == java.time.LocalDate.class) {
+            ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Invalid date format. Please use yyyy-MM-dd (e.g., 2026-04-04)."
+            );
+            return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+        }
+        ErrorResponse error = new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            "Invalid parameter: " + ex.getMessage()
+        );
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
 }

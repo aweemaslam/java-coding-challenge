@@ -32,11 +32,11 @@ public class ExchangeRateServiceImpl implements IExchangeRateService {
      */
     @Cacheable("get-all-exchange-rates")
     @Override
-    public PageImpl<ExchangeRateGroupedResponse> getAllExchangeRates(int page, int size, boolean sortByDateAsc, boolean ignoreNullRates) {
+    public PageImpl<ExchangeRateGroupedResponse> getAllExchangeRates(int page, int size, boolean sortByDateAsc, boolean includeNullRates) {
 
         List<ExchangeRateDto> persistedExchangeRates = exchangeRateRepository.findAllRates();
         List<ExchangeRateGroupedResponse> formattedResult =
-            exchangeRateHelperService.formatResult(persistedExchangeRates, sortByDateAsc, ignoreNullRates);
+            exchangeRateHelperService.formatResult(persistedExchangeRates, sortByDateAsc, includeNullRates);
 
         // Apply pagination manually on date attribute
         int start = Math.min(page * size, formattedResult.size());
@@ -50,14 +50,14 @@ public class ExchangeRateServiceImpl implements IExchangeRateService {
      * Retrieves exchange rates for a specific date.
      *
      * @param date           Date to fetch exchange rates for
-     * @param ignoreNullRates True to include null rates
+     * @param includeNullRates True to include null rates
      * @return Grouped exchange rate response
      */
     @Cacheable("get-exchange-rates-by-date")
     @Override
-    public ExchangeRateGroupedResponse getExchangeRatesByDate(LocalDate date, boolean ignoreNullRates) {
+    public ExchangeRateGroupedResponse getExchangeRatesByDate(LocalDate date, boolean includeNullRates) {
         List<ExchangeRateDto> persistedExchangeRates = exchangeRateRepository.findByDate(date);
-        return exchangeRateHelperService.formatResult(persistedExchangeRates, true, ignoreNullRates).stream().findFirst()
+        return exchangeRateHelperService.formatResult(persistedExchangeRates, true, includeNullRates).stream().findFirst()
             .orElseThrow(() -> new ExchangeRateNotFoundException(
                 "Exchange rate not found for date=" + date
             ));
@@ -70,11 +70,11 @@ public class ExchangeRateServiceImpl implements IExchangeRateService {
     @Override
     public RateDto getExchangeRateByCurrencyAndDate(String currencyCode, LocalDate date) {
 
-        ExchangeRate rate = exchangeRateRepository.findByCurrencyCurrencyCodeAndDate(currencyCode, date)
+        Double exchangeRate = exchangeRateRepository.findExchangeRateByCurrencyCurrencyCodeAndDate(currencyCode, date)
             .orElseThrow(() -> new ExchangeRateNotFoundException(
                 "Exchange rate not found for currency=" + currencyCode + " and date=" + date
             ));
-        return new RateDto(rate.getExchangeRate());
+        return new RateDto(exchangeRate);
     }
 
     /**
@@ -83,14 +83,14 @@ public class ExchangeRateServiceImpl implements IExchangeRateService {
     @Cacheable("convert-to-euro")
     @Override
     public RateDto convertToEuro(ExchangeRatePayload payload) {
-        ExchangeRate persistedExchangeRate = exchangeRateRepository.findByCurrencyCurrencyCodeAndDate(
+        Double persistedExchangeRate = exchangeRateRepository.findExchangeRateByCurrencyCurrencyCodeAndDate(
             payload.currencyCode(), payload.date()
         ).orElseThrow(() -> new ExchangeRateNotFoundException(
             "Exchange rate not found for currency=" + payload.currencyCode() + " and date=" + payload.date()
         ));
         return new RateDto(
             exchangeRateHelperService.convertAmountToEuro(
-                persistedExchangeRate.getExchangeRate(),
+                persistedExchangeRate,
                 payload.exchangeAmount()
             )
         );

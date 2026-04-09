@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * Feign client for interacting with Bundesbank exchange rate APIs.
+ * https://api.statistiken.bundesbank.de/doc/index.html
  */
 @FeignClient(
     name = "bundesbankClient",

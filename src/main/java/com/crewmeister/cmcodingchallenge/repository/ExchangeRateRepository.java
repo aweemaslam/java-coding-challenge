@@ -18,8 +18,8 @@ public interface ExchangeRateRepository extends JpaRepository<ExchangeRate, Long
     /**
      * Finds an exchange rate for a specific currency code and date.
      */
-    @Query("SELECT er FROM ExchangeRate er WHERE er.currency.currencyCode = :code AND er.date = :date")
-    Optional<ExchangeRate> findByCurrencyCurrencyCodeAndDate(String code, LocalDate date);
+    @Query("SELECT er.exchangeRate FROM ExchangeRate er WHERE er.currency.currencyCode = :code AND er.date = :date")
+    Optional<Double> findExchangeRateByCurrencyCurrencyCodeAndDate(String code, LocalDate date);
 
     /**
      * Retrieves all exchange rates as DTOs.

@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
  * Service to initialize and update the database with currency and exchange rate data.
  * Handles scheduled updates, initial setup, and cache rebuilding.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DatabaseInitService {
@@ -50,8 +52,13 @@ public class DatabaseInitService {
     )
     @SchedulerLock(name = "updateDB", lockAtLeastFor = "PT5M", lockAtMostFor = "PT10M")
     public void updateDB() {
+        long apiStart = System.currentTimeMillis();
         ExchangeRateApiResponse allRates = exchangeRateProviderPort.getRates(LocalDate.now(ZoneId.of(schedulerZone)));
+        long apiEnd = System.currentTimeMillis();
+        long dbStart = System.currentTimeMillis();
         updateDB(allRates);
+        long dbEnd = System.currentTimeMillis();
+        log.info("Update DB operation completed in {} s, Exchange Rates pulled successfully in {} s", (dbEnd - dbStart) / 1000.0, (apiEnd - apiStart) / 1000.0);
     }
 
     /**
@@ -59,8 +66,13 @@ public class DatabaseInitService {
      */
     @PostConstruct
     public void initDatabase() {
+        long apiStart = System.currentTimeMillis();
         ExchangeRateApiResponse allRates = exchangeRateProviderPort.getRates(null);
+        long apiEnd = System.currentTimeMillis();
+        long dbStart = System.currentTimeMillis();
         updateDB(allRates);
+        long dbEnd = System.currentTimeMillis();
+        log.info("DB operation completed in {} s, Exchange Rates pulled successfully in {} s", (dbEnd - dbStart) / 1000.0, (apiEnd - apiStart) / 1000.0);
     }
 
     /**
