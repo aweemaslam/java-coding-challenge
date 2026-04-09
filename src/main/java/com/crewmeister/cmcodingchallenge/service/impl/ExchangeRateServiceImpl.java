@@ -5,7 +5,6 @@ import com.crewmeister.cmcodingchallenge.dto.ExchangeRateGroupedResponse;
 import com.crewmeister.cmcodingchallenge.dto.ExchangeRatePayload;
 import com.crewmeister.cmcodingchallenge.dto.RateDto;
 import com.crewmeister.cmcodingchallenge.exception.ExchangeRateNotFoundException;
-import com.crewmeister.cmcodingchallenge.model.ExchangeRate;
 import com.crewmeister.cmcodingchallenge.repository.ExchangeRateRepository;
 import com.crewmeister.cmcodingchallenge.service.IExchangeRateService;
 import com.crewmeister.cmcodingchallenge.service.helper.ExchangeRateHelperService;

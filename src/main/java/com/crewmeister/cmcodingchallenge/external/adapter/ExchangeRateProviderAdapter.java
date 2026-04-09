@@ -6,7 +6,6 @@ import com.crewmeister.cmcodingchallenge.external.port.ExchangeRateProviderPort;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 /**
@@ -22,7 +21,6 @@ public class ExchangeRateProviderAdapter implements ExchangeRateProviderPort {
     /**
      * Retrieves exchange rates for a given date or all rates if date is null.
      */
-    @Cacheable("exchange-rates")
     @CircuitBreaker(name = "exchangeRate", fallbackMethod = "fallbackAllRates")
     @Override
     public ExchangeRateApiResponse getRates(LocalDate date) {
